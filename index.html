@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tsukuyomip-sandbox | a tiny free server in Singapore</title>
+<meta name="description" content="A simple landing page served from a free Altare sandbox. Everything here is public-safe by design.">
+<style>
+  :root {
+    --bg: #12101d;
+    --card: #1e1a30;
+    --ink: #f2eefc;
+    --muted: #b3a9d4;
+    --lime: #b8e62e;
+    --purple: #8b5cf6;
+    --line: #322b4d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(1100px 550px at 50% -80px, #2a2150 0%, var(--bg) 60%);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    line-height: 1.7;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 20px 64px; }
+  .badge {
+    display: inline-block; padding: 2px 12px; border: 1px solid var(--line);
+    border-radius: 999px; color: var(--lime); font-size: 13px; letter-spacing: .08em;
+    background: rgba(184, 230, 46, .07);
+  }
+  h1 { font-size: 40px; line-height: 1.25; margin: 18px 0 8px; }
+  h1 .grad {
+    background: linear-gradient(90deg, var(--lime), var(--purple));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lead { color: var(--muted); font-size: 17px; margin: 0 0 34px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 18px 20px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 6px; color: var(--lime); letter-spacing: .04em; }
+  .card p { margin: 0; color: var(--ink); font-size: 14.5px; }
+  .card p small { color: var(--muted); }
+  section { margin-top: 38px; }
+  section h2 { font-size: 19px; margin: 0 0 8px; }
+  section p { color: var(--muted); margin: 0 0 10px; font-size: 15px; }
+  code {
+    background: #0d0b16; border: 1px solid var(--line); border-radius: 6px;
+    padding: 1px 7px; font-size: 13.5px; color: var(--ink);
+  }
+  footer {
+    margin-top: 52px; padding-top: 18px; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 13px; display: flex; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px;
+  }
+  a { color: var(--lime); }
+</style>
+</head>
+<body>
+<main>
+  <span class="badge">ALTARE ALWAYS FREE</span>
+  <h1>tsukuyomip-<span class="grad">sandbox</span></h1>
+  <p class="lead">シンガポールの無料サーバーからこんにちは。ここは小さな実験箱の玄関ページです。</p>
+
+  <div class="cards">
+    <div class="card">
+      <h2>OS</h2>
+      <p>Ubuntu 24.04 LTS<br><small>Linux Sandbox</small></p>
+    </div>
+    <div class="card">
+      <h2>無料枠のスペック</h2>
+      <p>メモリ 4 GiB / CPU 125%<br><small>ディスク 40 GiB</small></p>
+    </div>
+    <div class="card">
+      <h2>リージョン</h2>
+      <p>Singapore<br><small>sg-sgp12</small></p>
+    </div>
+  </div>
+
+  <section>
+    <h2>このサーバーについて</h2>
+    <p>Altare の Always Free プランで動いている、期限なし・スリープなしの小さな Linux サンドボックスです。実験や小さなツールの置き場として使っています。</p>
+    <p>このページのソースは GitHub の <code>altare-site</code> リポジトリで公開しています。</p>
+  </section>
+
+  <section>
+    <h2>公開ポリシー</h2>
+    <p>このサーバーに置くものは「見られてもいいもの」だけ、がルールです。秘密情報や個人情報は一切置いていません。</p>
+  </section>
+
+  <footer>
+    <span>tsukuyomip-sandbox</span>
+    <span>Singapore time: <span id="sg-time">--:--:--</span></span>
+  </footer>
+</main>
+<script>
+  function tick() {
+    try {
+      document.getElementById('sg-time').textContent =
+        new Date().toLocaleTimeString('ja-JP', { timeZone: 'Asia/Singapore', hour12: false });
+    } catch (e) { /* keep placeholder */ }
+  }
+  tick();
+  setInterval(tick, 1000);
+</script>
+</body>
+</html>
