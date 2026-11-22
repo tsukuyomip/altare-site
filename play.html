@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ふじたんタウン | あそべるサイトマップ</title>
+<meta name="description" content="8bitのふじたんを歩かせて回る、Altareサンドボックスのプレイアブル・サイトマップ。">
+<style>
+  :root {
+    --bg: #171307;
+    --card: #241c0d;
+    --ink: #fdf6dd;
+    --muted: #d3c69c;
+    --lime: #ffd93b;
+    --purple: #ff9f1c;
+    --line: #453a1e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(1100px 550px at 50% -80px, #3d2f08 0%, var(--bg) 60%);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    line-height: 1.7;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 20px 56px; text-align: center; }
+  .badge {
+    display: inline-block; padding: 2px 12px; border: 1px solid var(--line);
+    border-radius: 999px; color: var(--lime); font-size: 13px; letter-spacing: .08em;
+    background: rgba(255, 217, 59, .08);
+  }
+  h1 { font-size: 32px; line-height: 1.25; margin: 14px 0 6px; }
+  h1 .grad {
+    background: linear-gradient(90deg, var(--lime), var(--purple));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lead { color: var(--muted); font-size: 15px; margin: 0 0 20px; }
+  #stage {
+    background: #0d0a03; border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px; display: inline-block; max-width: 100%;
+  }
+  canvas {
+    width: 100%; max-width: 640px; height: auto; display: block;
+    image-rendering: pixelated; image-rendering: crisp-edges;
+    background: #79a83b; border-radius: 4px; touch-action: none;
+  }
+  #msg {
+    margin: 14px auto 0; max-width: 640px; text-align: left;
+    background: var(--card); border: 2px solid var(--lime); border-radius: 10px;
+    padding: 12px 16px; min-height: 92px;
+  }
+  #msg h2 { font-size: 15px; margin: 0 0 4px; color: var(--lime); letter-spacing: .04em; }
+  #msg p { margin: 0; font-size: 14.5px; }
+  #msg a {
+    display: inline-block; margin-top: 8px; color: #171307; background: var(--lime);
+    padding: 2px 14px; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: 14px;
+  }
+  #pad {
+    margin: 16px auto 0; width: 168px; display: grid; gap: 6px;
+    grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px);
+    justify-content: center; user-select: none; -webkit-user-select: none;
+  }
+  #pad button {
+    background: var(--card); color: var(--lime); border: 1px solid var(--line);
+    border-radius: 10px; font-size: 20px; line-height: 1; cursor: pointer; touch-action: none;
+  }
+  #pad button:active { background: var(--lime); color: #171307; }
+  #pad .up { grid-area: 1 / 2; } #pad .left { grid-area: 2 / 1; }
+  #pad .right { grid-area: 2 / 3; } #pad .down { grid-area: 3 / 2; }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 14px; }
+  footer { margin-top: 34px; color: var(--muted); font-size: 13px; }
+  a { color: var(--lime); }
+</style>
+</head>
+<body>
+<main>
+  <span class="badge">PLAYABLE SITEMAP</span>
+  <h1>ふじたん<span class="grad">タウン</span></h1>
+  <p class="lead">8bitのふじたんを歩かせて、このサーバーの案内を見て回れます。看板の前に立つと説明が出ます。</p>
+
+  <div id="stage"><canvas id="cv" width="480" height="320"></canvas></div>
+
+  <div id="msg">
+    <h2 id="msg-title">ふじたんタウンへようこそ</h2>
+    <p id="msg-body">あたしを動かして、町の中の看板を巡ってみてください。このページ自体も、ふじたんのサンドボックスから配信されています。</p>
+    <a id="msg-link" href="#" style="display:none">開く</a>
+  </div>
+
+  <div id="pad">
+    <button class="up" data-dir="up" aria-label="上">▲</button>
+    <button class="left" data-dir="left" aria-label="左">◀</button>
+    <button class="right" data-dir="right" aria-label="右">▶</button>
+    <button class="down" data-dir="down" aria-label="下">▼</button>
+  </div>
+  <p class="hint">キーボードの矢印キー / WASD でも歩けます。</p>
+
+  <footer><a href="index.html">← トップページへもどる</a></footer>
+</main>
+<script>
+"use strict";
+// ---------- 8bit ふじたん スプライト (16x17, 2フレーム) ----------
+var PAL = {
+  H: "#7a4a21", d: "#54341a", S: "#ffcf9f", E: "#26221f", M: "#c96f4a",
+  R: "#191919", W: "#ffffff", Y: "#ffd93b", J: "#f4f1ea", V: "#8b5cf6",
+  G: "#43c465", K: "#8b5cf6", k: "#6d3fd4", O: "#ff8c1a"
+};
+var SPR_A = [
+"....HHHHHHHH....",
+"...HHHHHHHHHH...",
+"...HHHHHHHHHHW..",
+"..HHHHHHHHHHHH..",
+"..HHSSSSSSSSHH..",
+"..HHSS ESSESSHH..".replace(" ",""),
+"..HHSSSSSSSSHH..",
+"...HSSSMSSSSH...",
+"..RRSSSSSSSSRR..",
+"..ddSJJJJJJSdd..",
+"..ddSJYYYYJSdd..",
+"..ddSJYYYYJSdd..",
+"....SJYYYYJS....",
+"...KKKKKKKKKK...",
+"...KkKkKkKkKk...",
+"....SS....SS....",
+"...OOO....OOO..."
+];
+var SPR_B = [
+"....HHHHHHHH....",
+"...HHHHHHHHHH...",
+"...HHHHHHHHHHW..",
+"..HHHHHHHHHHHH..",
+"..HHSSSSSSSSHH..",
+"..HHSS ESSESSHH..".replace(" ",""),
+"..HHSSSSSSSSHH..",
+"...HSSSMSSSSH...",
+"..RRSSSSSSSSRR..",
+"..ddSJJJJJJSdd..",
+"..ddSJYYYYJSdd..",
+"..ddSJYYYYJSdd..",
+"....SJYYYYJS....",
+"...KKKKKKKKKK...",
+"...KkKkKkKkKk...",
+".....SS..SS.....",
+"....OOO..OOO...."
+];
+function drawSprite(ctx, spr, x, y, flip) {
+  for (var r = 0; r < spr.length; r++) {
+    var row = spr[r];
+    for (var c = 0; c < 16; c++) {
+      var ch = row.charAt(flip ? 15 - c : c);
+      var col = PAL[ch];
+      if (col) { ctx.fillStyle = col; ctx.fillRect(x + c, y + r, 1, 1); }
+    }
+  }
+}
+</script>
+<script>
+"use strict";
+// ---------- マップ (30x20 tiles, 1tile=16px) ----------
+var TILE = 16, MW = 30, MH = 20;
+var blocked = {};
+function block(x, y) { blocked[x + "," + y] = true; }
+var tx, ty;
+// 池 (左下)
+for (tx = 1; tx <= 6; tx++) for (ty = 15; ty <= 18; ty++) block(tx, ty);
+// 家 (上部中央)
+for (tx = 11; tx <= 18; tx++) for (ty = 1; ty <= 5; ty++) block(tx, ty);
+// 時計台
+for (tx = 24; tx <= 25; tx++) for (ty = 2; ty <= 5; ty++) block(tx, ty);
+// 木
+[[2,2],[5,6],[8,3],[20,3],[27,7],[25,16],[10,17],[22,8]].forEach(function (p) { block(p[0], p[1]); });
+// 看板
+var SIGNS = [
+  { sx: 11, sy: 9,  zx: 11, zy: 10, title: "このサーバーについて",
+    body: "Altare の Always Free プランで動いている、期限なし・スリープなしの小さな Linux サンドボックスです。実験や小さなツールの置き場として使っています。" },
+  { sx: 18, sy: 9,  zx: 18, zy: 10, title: "公開ポリシー",
+    body: "このサーバーに置くものは「見られてもいいもの」だけ、がルールです。秘密情報や個人情報は一切置いていません。乗っ取られる前提で運用しています。" },
+  { sx: 5,  sy: 11, zx: 5,  zy: 12, title: "無料枠のスペック",
+    body: "メモリ 4 GiB / CPU 125% / ディスク 40 GiB。OS は Ubuntu 24.04 LTS、リージョンは Singapore です。" },
+  { sx: 24, sy: 11, zx: 24, zy: 12, title: "GitHub の扉",
+    body: "このページのソースは GitHub の altare-site リポジトリで公開しています。",
+    link: "https://github.com/tsukuyomip/altare-site", linkText: "リポジトリを開く" },
+  { sx: 7,  sy: 14, zx: 7,  zy: 15, title: "まちの池",
+    body: "ただの池です。でも、こういう何もない場所があるのが、この箱のいいところ。大事なものは置いていないので、安心して眺められます。" }
+];
+SIGNS.forEach(function (s) { block(s.sx, s.sy); });
+var ZONES = [
+  { tiles: [[14,6],[15,6]], title: "ふじたんのサーバー小屋",
+    body: "ここが配信の元、ふじたんのサンドボックス (fujitan-sandbox) です。この町もトップページも、ここから届いています。",
+    link: "index.html", linkText: "トップページを開く" },
+  { tiles: [[24,6],[25,6]], title: "シンガポール時計台", clock: true,
+    body: "いまのシンガポールは --:--:-- です。" }
+];
+SIGNS.forEach(function (s) {
+  ZONES.push({ tiles: [[s.zx, s.zy]], title: s.title, body: s.body, link: s.link, linkText: s.linkText });
+});
+function zoneAt(px, py) {
+  for (var i = 0; i < ZONES.length; i++) {
+    var ts = ZONES[i].tiles;
+    for (var j = 0; j < ts.length; j++) if (ts[j][0] === px && ts[j][1] === py) return ZONES[i];
+  }
+  return null;
+}
+// ---------- 静的マップを先に描く ----------
+var bg = document.createElement("canvas"); bg.width = 480; bg.height = 320;
+(function paint() {
+  var c = bg.getContext("2d");
+  c.fillStyle = "#79a83b"; c.fillRect(0, 0, 480, 320);
+  c.fillStyle = "#71a034";
+  for (var x = 0; x < MW; x++) for (var y = 0; y < MH; y++)
+    if ((x + y) % 2 === 0) c.fillRect(x * TILE, y * TILE, TILE, TILE);
+  // 花 (座標から決定的に)
+  var fl = ["#ffffff", "#ffd93b", "#ff9ecb"];
+  for (x = 0; x < MW; x++) for (y = 0; y < MH; y++) {
+    var h = (x * 73 + y * 149) % 11;
+    if (h < 2 && !blocked[x + "," + y]) {
+      c.fillStyle = fl[h % 3]; c.fillRect(x * TILE + 4 + h * 3, y * TILE + 5, 2, 2);
+      c.fillStyle = "#5d8a2a"; c.fillRect(x * TILE + 5 + h * 3, y * TILE + 8, 1, 3);
+    }
+  }
+  // 道
+  c.fillStyle = "#d9b96a";
+  c.fillRect(14 * TILE, 6 * TILE, 2 * TILE, 14 * TILE);
+  c.fillRect(2 * TILE, 12 * TILE, 26 * TILE, 2 * TILE);
+  c.fillStyle = "#cdae57";
+  c.fillRect(14 * TILE, 6 * TILE, 1, 14 * TILE); c.fillRect(2 * TILE, 12 * TILE, 26 * TILE, 1);
+  // 池
+  c.fillStyle = "#3f7fbf"; c.fillRect(1 * TILE, 15 * TILE, 6 * TILE, 4 * TILE);
+  c.fillStyle = "#5b9bd5";
+  for (var i = 0; i < 8; i++) c.fillRect((1 + (i * 37) % 6) * TILE + 3, (15 + (i * 53) % 4) * TILE + 6, 6, 1);
+  // 家
+  c.fillStyle = "#b0522e"; c.fillRect(11 * TILE, 1 * TILE, 8 * TILE, 2 * TILE);
+  c.fillStyle = "#8f3f21"; c.fillRect(11 * TILE, 2 * TILE + 12, 8 * TILE, 4);
+  c.fillStyle = "#f0e2c4"; c.fillRect(11 * TILE, 3 * TILE, 8 * TILE, 3 * TILE);
+  c.fillStyle = "#7a5a34"; c.fillRect(14 * TILE, 4 * TILE, 2 * TILE, 2 * TILE);
+  c.fillStyle = "#ffd93b"; c.fillRect(15 * TILE + 11, 5 * TILE + 2, 2, 2);
+  c.fillStyle = "#5b9bd5";
+  c.fillRect(12 * TILE, 3 * TILE + 6, TILE, TILE); c.fillRect(17 * TILE, 3 * TILE + 6, TILE, TILE);
+  // 時計台
+  c.fillStyle = "#9a958c"; c.fillRect(24 * TILE, 2 * TILE, 2 * TILE, 4 * TILE);
+  c.fillStyle = "#6e6a63"; c.fillRect(24 * TILE, 2 * TILE, 2 * TILE, 4);
+  c.fillStyle = "#fdf6dd"; c.fillRect(24 * TILE + 7, 2 * TILE + 8, 18, 18);
+  c.fillStyle = "#26221f";
+  c.fillRect(24 * TILE + 15, 2 * TILE + 10, 2, 7); c.fillRect(24 * TILE + 15, 2 * TILE + 16, 6, 2);
+  // 木
+  [[2,2],[5,6],[8,3],[20,3],[27,7],[25,16],[10,17],[22,8]].forEach(function (p) {
+    c.fillStyle = "#7a5a34"; c.fillRect(p[0] * TILE + 7, p[1] * TILE + 10, 3, 6);
+    c.fillStyle = "#3e7d2c"; c.fillRect(p[0] * TILE + 1, p[1] * TILE, 14, 11);
+    c.fillStyle = "#4c9440"; c.fillRect(p[0] * TILE + 4, p[1] * TILE + 2, 8, 6);
+  });
+  // 看板
+  SIGNS.forEach(function (s) {
+    c.fillStyle = "#7a5a34"; c.fillRect(s.sx * TILE + 7, s.sy * TILE + 7, 2, 8);
+    c.fillStyle = "#caa25f"; c.fillRect(s.sx * TILE + 1, s.sy * TILE, 14, 8);
+    c.fillStyle = "#7a5a34"; c.fillRect(s.sx * TILE + 3, s.sy * TILE + 3, 8, 2);
+  });
+})();
+// ---------- プレイヤー ----------
+var cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+var player = { x: 15 * TILE - 8, y: 12 * TILE, flip: false, moving: false, anim: 0 };
+var keys = {};
+function footTile(nx, ny) {
+  return [Math.floor((nx + 8) / TILE), Math.floor((ny + 15) / TILE)];
+}
+function tryMove(dx, dy, dt) {
+  var sp = 92 * dt;
+  var nx = player.x + dx * sp, ny = player.y + dy * sp;
+  var t = footTile(nx, ny);
+  if (t[0] < 0 || t[1] < 0 || t[0] >= MW || t[1] >= MH) return;
+  if (blocked[t[0] + "," + t[1]]) {
+    var t2 = footTile(player.x, ny);
+    if (dy !== 0 && !blocked[t2[0] + "," + t2[1]]) player.y = ny;
+    return;
+  }
+  player.x = nx; player.y = ny;
+}
+// ---------- メッセージ ----------
+var msgTitle = document.getElementById("msg-title"),
+    msgBody = document.getElementById("msg-body"),
+    msgLink = document.getElementById("msg-link"),
+    activeZone = null;
+function showZone(z) {
+  msgTitle.textContent = z.title;
+  msgBody.textContent = z.body;
+  if (z.link) {
+    msgLink.href = z.link; msgLink.textContent = z.linkText || "開く";
+    msgLink.style.display = "inline-block";
+    if (/^https:/.test(z.link)) { msgLink.target = "_blank"; msgLink.rel = "noopener"; }
+    else { msgLink.removeAttribute("target"); }
+  } else msgLink.style.display = "none";
+}
+function clockText() {
+  try {
+    return "いまのシンガポールは " + new Date().toLocaleTimeString("ja-JP",
+      { timeZone: "Asia/Singapore", hour12: false }) + " です。このサーバーもシンガポールにあります。";
+  } catch (e) { return "時計が読めませんでした。"; }
+}
+// ---------- 入力 ----------
+window.addEventListener("keydown", function (e) {
+  var k = e.key.toLowerCase();
+  if (e.key.indexOf("Arrow") === 0) e.preventDefault();
+  keys[e.key] = true; keys[k] = true;
+});
+window.addEventListener("keyup", function (e) { keys[e.key] = false; keys[e.key.toLowerCase()] = false; });
+document.querySelectorAll("#pad button").forEach(function (b) {
+  var dir = b.getAttribute("data-dir");
+  function on(e) { e.preventDefault(); keys["pad:" + dir] = true; }
+  function off(e) { e.preventDefault(); keys["pad:" + dir] = false; }
+  b.addEventListener("pointerdown", on);
+  b.addEventListener("pointerup", off);
+  b.addEventListener("pointerleave", off);
+  b.addEventListener("pointercancel", off);
+});
+function inputDir() {
+  var dx = 0, dy = 0;
+  if (keys["ArrowLeft"] || keys["a"] || keys["pad:left"]) dx = -1;
+  if (keys["ArrowRight"] || keys["d"] || keys["pad:right"]) dx = 1;
+  if (keys["ArrowUp"] || keys["w"] || keys["pad:up"]) dy = -1;
+  if (keys["ArrowDown"] || keys["s"] || keys["pad:down"]) dy = 1;
+  return [dx, dy];
+}
+// ---------- メインループ ----------
+var last = performance.now(), clockTimer = 0;
+function frame(now) {
+  var dt = Math.min(0.05, (now - last) / 1000); last = now;
+  var d = inputDir();
+  player.moving = (d[0] !== 0 || d[1] !== 0);
+  if (player.moving) {
+    if (d[0] !== 0 && d[1] !== 0) { d = [d[0] * 0.707, d[1] * 0.707]; }
+    if (d[0] < 0) player.flip = true; else if (d[0] > 0) player.flip = false;
+    tryMove(d[0], d[1], dt);
+    player.anim += dt;
+  }
+  var ft = footTile(player.x, player.y);
+  var z = zoneAt(ft[0], ft[1]);
+  if (z !== activeZone) {
+    activeZone = z;
+    if (z) showZone(z);
+  }
+  if (activeZone && activeZone.clock) {
+    clockTimer += dt;
+    if (clockTimer > 0.25) { clockTimer = 0; msgBody.textContent = clockText(); }
+  }
+  ctx.drawImage(bg, 0, 0);
+  var spr = (player.moving && Math.floor(player.anim / 0.18) % 2 === 1) ? SPR_B : SPR_A;
+  var bob = player.moving ? Math.floor(player.anim / 0.18) % 2 : 0;
+  drawSprite(ctx, spr, Math.round(player.x), Math.round(player.y) - bob, player.flip);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
